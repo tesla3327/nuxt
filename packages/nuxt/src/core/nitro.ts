@@ -3,7 +3,6 @@ import { existsSync, promises as fsp, readFileSync } from 'node:fs'
 import { cpus } from 'node:os'
 import { join, relative, resolve } from 'pathe'
 import { createRouter as createRadixRouter, exportMatcher, toRouteMatcher } from 'radix3'
-import { randomUUID } from 'uncrypto'
 import { joinURL, withTrailingSlash } from 'ufo'
 import { build, copyPublicAssets, createDevServer, createNitro, prepare, prerender, scanHandlers, writeTypes } from 'nitropack'
 import type { Nitro, NitroConfig, NitroOptions } from 'nitropack'
@@ -236,8 +235,7 @@ export async function initNitro (nuxt: Nuxt & { _nitro?: Nitro }) {
   // Add app manifest handler and prerender configuration
   if (nuxt.options.experimental.appManifest) {
     // @ts-expect-error untyped nuxt property
-    const buildId = nuxt.options.appConfig.nuxt!.buildId ||=
-      (nuxt.options.dev ? 'dev' : nuxt.options.test ? 'test' : randomUUID())
+    const manifestBuildId = nuxt.options.appConfig.nuxt!.buildId ||= nuxt.options.buildId
     const buildTimestamp = Date.now()
 
     const manifestPrefix = joinURL(nuxt.options.app.buildAssetsDir, 'builds')
@@ -262,7 +260,7 @@ export async function initNitro (nuxt: Nuxt & { _nitro?: Nitro }) {
       },
     )
 
-    nuxt.options.alias['#app-manifest'] = join(tempDir, `meta/${buildId}.json`)
+    nuxt.options.alias['#app-manifest'] = join(tempDir, `meta/${manifestBuildId}.json`)
 
     nuxt.hook('nitro:config', (config) => {
       const rules = config.routeRules
@@ -324,7 +322,7 @@ export async function initNitro (nuxt: Nuxt & { _nitro?: Nitro }) {
         }
 
         const manifest = {
-          id: buildId,
+          id: manifestBuildId,
           timestamp: buildTimestamp,
           matcher: exportMatcher(routeRulesMatcher),
           prerendered: nuxt.options.dev ? [] : [...prerenderedRoutes],
@@ -332,10 +330,10 @@ export async function initNitro (nuxt: Nuxt & { _nitro?: Nitro }) {
 
         await fsp.mkdir(join(tempDir, 'meta'), { recursive: true })
         await fsp.writeFile(join(tempDir, 'latest.json'), JSON.stringify({
-          id: buildId,
+          id: manifestBuildId,
           timestamp: buildTimestamp,
         }))
-        await fsp.writeFile(join(tempDir, `meta/${buildId}.json`), JSON.stringify(manifest))
+        await fsp.writeFile(join(tempDir, `meta/${manifestBuildId}.json`), JSON.stringify(manifest))
       })
     })
   }

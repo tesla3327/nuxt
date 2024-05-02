@@ -1,4 +1,5 @@
 import { existsSync } from 'node:fs'
+import { randomUUID } from 'node:crypto'
 import { defineUntypedSchema } from 'untyped'
 import { join, relative, resolve } from 'pathe'
 import { isDebug, isDevelopment, isTest } from 'std-env'
@@ -129,6 +130,18 @@ export default defineUntypedSchema({
       const isV4 = ((await get('future') as Record<string, unknown>).compatibilityVersion === 4)
 
       return resolve(await get('rootDir') as string, (val || isV4) ? 'server' : resolve(await get('srcDir') as string, 'server'))
+    },
+  },
+
+  /**
+   * A unique identifier matching the build. This may contain the hash of the current state of the project
+   */
+  buildId: {
+    $resolve: async (val, get) => {
+      const [isDev, isTest] = await Promise.all([get('dev') as Promise<boolean>, get('test') as Promise<boolean>])
+      if (isDev) { return 'dev' }
+      if (isTest) { return 'test' }
+      return randomUUID()
     },
   },
 
