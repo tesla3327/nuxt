@@ -15,6 +15,9 @@ export default defineUntypedSchema({
   _prepare: {
     $resolve: val => val ?? false
   },
+  _layers: {
+    $resolve: val => val ?? []
+  },
   /** @private */
   _cli: false,
   /** @private */
