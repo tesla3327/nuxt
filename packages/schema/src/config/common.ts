@@ -158,7 +158,14 @@ export default defineUntypedSchema({
    * ```
    */
   buildDir: {
-    $resolve: async (val: string | undefined, get): Promise<string> => resolve(await get('rootDir') as string, val || '.nuxt'),
+    $resolve: async (val: string | undefined, get): Promise<string> => {
+      const [isDev, rootDir, buildId, isPreparing] = await Promise.all([get('dev') as Promise<boolean>, get('rootDir') as Promise<string>, get('buildId') as Promise<string>, get('_prepare') as Promise<boolean>])
+      const defaultPath = resolve(rootDir, val || '.nuxt')
+      if (isDev || isPreparing || /* TODO: write types to default location before building */ !existsSync(defaultPath)) {
+        return defaultPath
+      }
+      return resolve(rootDir, val || join('.nuxt/builds', buildId))
+    },
   },
 
   /**

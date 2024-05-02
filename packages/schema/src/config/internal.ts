@@ -12,7 +12,9 @@ export default defineUntypedSchema({
   /** @private */
   _generate: false,
   /** @private */
-  _prepare: false,
+  _prepare: {
+    $resolve: val => val ?? false
+  },
   /** @private */
   _cli: false,
   /** @private */
