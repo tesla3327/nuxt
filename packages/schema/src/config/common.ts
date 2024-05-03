@@ -138,13 +138,6 @@ export default defineUntypedSchema({
    */
   buildId: {
     $resolve: async (val, get) => {
-      const [isDev, isTest] = await Promise.all([get('dev') as Promise<boolean>, get('test') as Promise<boolean>])
-      if (isDev) { return 'dev' }
-      // TODO: consider moving this exclusively to manifest
-      if (isTest) { return 'test' }
-      // TODO: create snapshot
-      // TODO: fall back to git commit id (if working directory is clean)
-      // Fall back to random ID
       return randomUUID()
     },
   },
